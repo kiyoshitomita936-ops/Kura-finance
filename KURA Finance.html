@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-title" content="KURA Finance">
+    <title>KURA Finance</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        :root {
+            --bg: #050510;
+            --bg-card: #0d0d20;
+            --bg-input: #111125;
+            --cyan: #00e5ff;
+            --purple: #8b5cf6;
+            --green: #00ff94;
+            --red: #ff4466;
+            --text: #e0e0ff;
+            --text-dim: #6b6b9a;
+            --border: #1e1e3a;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+            min-height: 100vh;
+            padding-bottom: 90px;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image:
+                linear-gradient(rgba(0,229,255,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0,229,255,0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* HEADER */
+        .header {
+            position: sticky; top: 0; z-index: 100;
+            background: rgba(5,5,16,0.92);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            padding: 14px 20px;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .header-logo {
+            font-size: 18px; font-weight: 800; letter-spacing: 3px;
+            background: linear-gradient(135deg, var(--cyan), var(--purple));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .header-year {
+            font-size: 13px; color: var(--text-dim);
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: 20px; padding: 4px 14px; cursor: pointer;
+        }
+
+        /* PAGES */
+        .page { display: none; padding: 20px; position: relative; z-index: 1; }
+        .page.active { display: block; }
+
+        /* CARDS */
+        .card {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: 16px; padding: 18px; margin-bottom: 12px;
+        }
+        .card-cyan { border-color: rgba(0,229,255,0.15); box-shadow: 0 0 30px rgba(0,229,255,0.05); }
+        .card-purple { border-color: rgba(139,92,246,0.15); box-shadow: 0 0 30px rgba(139,92,246,0.05); }
+
+        /* STATS */
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+        .stat-card {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: 16px; padding: 16px;
+        }
+        .stat-label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+        .stat-value { font-size: 17px; font-weight: 700; }
+        .stat-sub { font-size: 11px; color: var(--text-dim); margin-top: 4px; }
+        .cyan { color: var(--cyan); }
+        .purple { color: var(--purple); }
+        .green { color: var(--green); }
+        .red { color: var(--red); }
+
+        .big-stat {
+            background: var(--bg-card); border-radius: 20px; padding: 24px;
+            margin-bottom: 12px; text-align: center;
+            border: 1px solid rgba(0,229,255,0.12);
+            box-shadow: 0 0 40px rgba(0,229,255,0.06);
+        }
+        .big-stat-label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px; }
+        .big-stat-value { font-size: 34px; font-weight: 800; letter-spacing: -1px; }
+
+        /* SECTION TITLE */
+        .section-title {
+            font-size: 11px; font-weight: 600; color: var(--text-dim);
+            text-transform: uppercase; letter-spacing: 1.5px; margin: 20px 0 12px;
+        }
+
+        /* PAGE TITLE */
+        .page-title { font-size: 26px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 4px; }
+        .page-subtitle { font-size: 14px; color: var(--text-dim); margin-bottom: 20px; }
+
+        /* PROGRESS */
+        .progress-bar { height: 3px; background: var(--border); border-radius: 2px; margin-top: 10px; overflow: hidden; }
+        .progress-fill { height: 100%; border-radius: 2px; background: linear-gradient(90deg, var(--cyan), var(--purple)); transition: width 0.5s ease; }
+
+        /* TRANSACTION */
+        .tx-item {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 14px 16px; background: var(--bg-card);
+            border: 1px solid var(--border); border-radius: 14px; margin-bottom: 8px;
+        }
+        .tx-left { flex: 1; min-width: 0; }
+        .tx-title { font-size: 15px; font-weight: 500; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .tx-meta { font-size: 12px; color: var(--text-dim); }
+        .tx-amount { font-size: 15px; font-weight: 700; white-space: nowrap; margin-left: 10px; }
+        .tx-amount.income { color: var(--green); }
+        .tx-amount.expense { color: var(--red); }
+        .tx-amount.sub { color: var(--purple); }
+        .tx-delete { background: none; border: none; color: var(--text-dim); font-size: 20px; padding: 0 0 0 10px; cursor: pointer; flex-shrink: 0; }
+
+        /* FORM */
+        .form-group { margin-bottom: 16px; }
+        .form-label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; display: block; }
+        .form-input {
+            width: 100%; background: var(--bg-input); border: 1px solid var(--border);
+            border-radius: 12px; padding: 14px 16px; color: var(--text); font-size: 16px;
+            outline: none; -webkit-appearance: none; transition: border-color 0.2s;
+        }
+        .form-input:focus { border-color: var(--cyan); box-shadow: 0 0 0 2px rgba(0,229,255,0.1); }
+        select.form-input { cursor: pointer; }
+
+        /* BUTTONS */
+        .btn-primary {
+            width: 100%; padding: 16px;
+            background: linear-gradient(135deg, var(--cyan), var(--purple));
+            border: none; border-radius: 14px; color: #000;
+            font-size: 16px; font-weight: 700; cursor: pointer; margin-top: 8px;
+        }
+        .btn-secondary {
+            width: 100%; padding: 14px; background: transparent;
+            border: 1px solid var(--border); border-radius: 14px;
+            color: var(--text-dim); font-size: 15px; cursor: pointer; margin-top: 8px;
+        }
+
+        /* FAB */
+        .fab {
+            position: fixed; bottom: 90px; right: 20px;
+            width: 58px; height: 58px; border-radius: 29px;
+            background: linear-gradient(135deg, var(--cyan), var(--purple));
+            border: none; color: #000; font-size: 26px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; box-shadow: 0 4px 24px rgba(0,229,255,0.35); z-index: 99;
+        }
+
+        /* BOTTOM NAV */
+        .bottom-nav {
+            position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+            background: rgba(5,5,16,0.96);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border-top: 1px solid var(--border);
+            display: flex;
+            padding: 8px 0 calc(8px + env(safe-area-inset-bottom));
+        }
+        .nav-item {
+            flex: 1; display: flex; flex-direction: column; align-items: center;
+            gap: 3px; padding: 8px 0; cursor: pointer;
+            background: none; border: none; color: var(--text-dim);
+            font-size: 10px; letter-spacing: 0.5px; text-transform: uppercase; transition: color 0.2s;
+        }
+        .nav-item.active { color: var(--cyan); }
+        .nav-icon { font-size: 20px; line-height: 1; }
+
+        /* MODAL */
+        .modal-overlay {
+            display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.75); z-index: 200;
+            backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+        }
+        .modal-overlay.active { display: block; }
+        .modal {
+            position: absolute; bottom: 0; left: 0; right: 0;
+            background: #0d0d20; border-radius: 24px 24px 0 0;
+            padding: 16px 20px calc(24px + env(safe-area-inset-bottom));
+            border-top: 1px solid var(--border);
+            max-height: 92vh; overflow-y: auto;
+        }
+        .modal-handle { width: 36px; height: 4px; background: var(--border); border-radius: 2px; margin: 0 auto 20px; }
+        .modal-title { font-size: 18px; font-weight: 700; margin-bottom: 20px; }
+
+        /* YEAR PICKER */
+        .year-modal {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: 20px; padding: 20px; z-index: 300; min-width: 200px;
+        }
+        .year-option {
+            padding: 14px 20px; font-size: 16px; cursor: pointer;
+            border-radius: 10px; text-align: center; margin-bottom: 4px;
+        }
+        .year-option:hover, .year-option.active { background: rgba(0,229,255,0.1); color: var(--cyan); }
+
+        /* EMPTY */
+        .empty { text-align: center; padding: 50px 20px; color: var(--text-dim); }
+        .empty-icon { font-size: 36px; margin-bottom: 12px; opacity: 0.4; }
+
+        /* ALERT */
+        .alert {
+            position: fixed; top: 80px; left: 50%; transform: translateX(-50%);
+            background: var(--bg-card); border: 1px solid rgba(0,229,255,0.3);
+            border-radius: 12px; padding: 12px 20px; font-size: 14px;
+            color: var(--cyan); z-index: 400; white-space: nowrap;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            animation: fadeInOut 2s ease forwards;
+        }
+        @keyframes fadeInOut {
+            0% { opacity: 0; transform: translateX(-50%) translateY(-8px); }
+            15% { opacity: 1; transform: translateX(-50%) translateY(0); }
+            75% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <div class="header-logo">KURA FINANCE</div>
+    <div class="header-year" id="headerYear" onclick="openYearPicker()">2026</div>
+</div>
+
+<!-- DASHBOARD -->
+<div class="page active" id="page-dashboard">
+    <div class="section-title">Resumen del año</div>
+
+    <div class="big-stat">
+        <div class="big-stat-label">Ingresos Totales</div>
+        <div class="big-stat-value cyan" id="dash-total-income">¥0</div>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-label">Gastos</div>
+            <div class="stat-value red" id="dash-total-expenses">¥0</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Equipo / DJs</div>
+            <div class="stat-value purple" id="dash-total-subs">¥0</div>
+        </div>
+    </div>
+
+    <div class="card card-cyan">
+        <div class="stat-label">Base Imponible Estimada</div>
+        <div class="stat-value green" id="dash-base">¥0</div>
+        <div class="stat-sub">Ingresos − Gastos − Equipo</div>
+        <div class="progress-bar">
+            <div class="progress-fill" id="dash-progress" style="width:0%"></div>
+        </div>
+    </div>
+
+    <div class="section-title">Este mes</div>
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-label">Ingresos</div>
+            <div class="stat-value cyan" id="dash-month-income">¥0</div>
+            <div class="stat-sub" id="dash-month-name">—</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Gastos</div>
+            <div class="stat-value red" id="dash-month-expenses">¥0</div>
+        </div>
+    </div>
+
+    <div class="section-title">Últimas transacciones</div>
+    <div id="dash-recent"></div>
+</div>
+
+<!-- INGRESOS -->
+<div class="page" id="page-ingresos">
+    <div class="page-title">Ingresos</div>
+    <div class="page-subtitle" id="ingresos-total-label">Total: ¥0</div>
+    <div id="ingresos-list"></div>
+</div>
+
+<!-- GASTOS -->
+<div class="page" id="page-gastos">
+    <div class="page-title">Gastos</div>
+    <div class="page-subtitle" id="gastos-total-label">Total: ¥0</div>
+    <div id="gastos-list"></div>
+</div>
+
+<!-- EQUIPO -->
+<div class="page" id="page-subs">
+    <div class="page-title">Equipo & DJs</div>
+    <div class="page-subtitle" id="subs-total-label">Total: ¥0</div>
+    <div id="subs-list"></div>
+</div>
+
+<!-- FAB -->
+<button class="fab" id="fab-btn">＋</button>
+
+<!-- BOTTOM NAV -->
+<div class="bottom-nav">
+    <button class="nav-item active" onclick="navigate('dashboard')" id="nav-dashboard">
+        <span class="nav-icon">⬡</span>
+        <span>Inicio</span>
+    </button>
+    <button class="nav-item" onclick="navigate('ingresos')" id="nav-ingresos">
+        <span class="nav-icon">↑</span>
+        <span>Ingresos</span>
+    </button>
+    <button class="nav-item" onclick="navigate('gastos')" id="nav-gastos">
+        <span class="nav-icon">↓</span>
+        <span>Gastos</span>
+    </button>
+    <button class="nav-item" onclick="navigate('subs')" id="nav-subs">
+        <span class="nav-icon">◎</span>
+        <span>Equipo</span>
+    </button>
+</div>
+
+<!-- MODAL AGREGAR -->
+<div class="modal-overlay" id="modal-overlay">
+    <div class="modal" id="modal">
+        <div class="modal-handle"></div>
+        <div class="modal-title" id="modal-title">Agregar</div>
+        <div id="modal-content"></div>
+    </div>
+</div>
+
+<script>
+// ========== STORAGE ==========
+const KEY = 'kura_finance_v1';
+function load() {
+    try { return JSON.parse(localStorage.getItem(KEY)) || {ingresos:[],gastos:[],subs:[]}; }
+    catch { return {ingresos:[],gastos:[],subs:[]}; }
+}
+function save() { localStorage.setItem(KEY, JSON.stringify(db)); }
+
+let db = load();
+let currentPage = 'dashboard';
+let currentYear = new Date().getFullYear();
+
+// ========== HELPERS ==========
+function yen(n) { return '¥' + Math.round(n).toLocaleString('ja-JP'); }
+function fDate(s) {
+    if (!s) return '';
+    const d = new Date(s + 'T00:00:00');
+    return d.toLocaleDateString('es', {day:'2-digit', month:'short'});
+}
+const MONTHS = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+const CAT_LABELS = {transporte:'Transporte',clientes:'Comida & Clientes',comunicacion:'Comunicación',alquiler:'Alquiler',medico:'Médico',otro:'Otro'};
+
+// ========== NAVIGATION ==========
+function navigate(page) {
+    currentPage = page;
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('page-' + page).classList.add('active');
+    document.getElementById('nav-' + page).classList.add('active');
+    render();
+}
+
+// ========== RENDER ==========
+function yearItems(arr) { return arr.filter(i => i.fecha && i.fecha.startsWith(String(currentYear))); }
+function sum(arr) { return arr.reduce((s,i) => s + Number(i.monto||0), 0); }
+
+function render() {
+    if (currentPage === 'dashboard') renderDash();
+    else renderList(currentPage);
+}
+
+function renderDash() {
+    const inc = yearItems(db.ingresos), exp = yearItems(db.gastos), sub = yearItems(db.subs);
+    const tInc = sum(inc), tExp = sum(exp), tSub = sum(sub);
+    const base = Math.max(0, tInc - tExp - tSub);
+
+    document.getElementById('dash-total-income').textContent = yen(tInc);
+    document.getElementById('dash-total-expenses').textContent = yen(tExp);
+    document.getElementById('dash-total-subs').textContent = yen(tSub);
+    document.getElementById('dash-base').textContent = yen(base);
+    document.getElementById('headerYear').textContent = currentYear;
+
+    const pct = tInc > 0 ? Math.min(100, ((tExp + tSub) / tInc) * 100) : 0;
+    document.getElementById('dash-progress').style.width = pct + '%';
+
+    const now = new Date();
+    const ms = String(currentYear) + '-' + String(now.getMonth()+1).padStart(2,'0');
+    document.getElementById('dash-month-name').textContent = MONTHS[now.getMonth()];
+    document.getElementById('dash-month-income').textContent = yen(sum(db.ingresos.filter(i=>i.fecha&&i.fecha.startsWith(ms))));
+    document.getElementById('dash-month-expenses').textContent = yen(sum(db.gastos.filter(i=>i.fecha&&i.fecha.startsWith(ms))));
+
+    const all = [
+        ...db.ingresos.map(i=>({...i,_t:'ingreso'})),
+        ...db.gastos.map(i=>({...i,_t:'gasto'})),
+        ...db.subs.map(i=>({...i,_t:'sub'}))
+    ].sort((a,b)=>(b.fecha||'').localeCompare(a.fecha||'')).slice(0,6);
+
+    const el = document.getElementById('dash-recent');
+    el.innerHTML = all.length === 0
+        ? '<div class="empty"><div class="empty-icon">⬡</div><div>Sin transacciones aún</div></div>'
+        : all.map(tx => txRow(tx, false)).join('');
+}
+
+function renderList(type) {
+    const items = yearItems(db[type]).slice().sort((a,b)=>(b.fecha||'').localeCompare(a.fecha||''));
+    const total = sum(items);
+    const prefix = type === 'ingresos' ? '+' : '-';
+    document.getElementById(type+'-total-label').textContent = 'Total: ' + prefix + yen(total);
+
+    const el = document.getElementById(type+'-list');
+    if (items.length === 0) {
+        el.innerHTML = '<div class="empty"><div class="empty-icon">⬡</div><div>Sin registros</div></div>';
+        return;
+    }
+    el.innerHTML = items.map(item => {
+        const realIdx = db[type].indexOf(item);
+        const t = type === 'ingresos' ? 'ingreso' : type === 'gastos' ? 'gasto' : 'sub';
+        return txRow({...item, _t: t}, true, type, realIdx);
+    }).join('');
+}
+
+function txRow(tx, deletable, type, idx) {
+    let title, meta, cls, amt;
+    if (tx._t === 'ingreso') {
+        title = tx.cliente || 'Ingreso';
+        meta = fDate(tx.fecha) + (tx.nota ? ' · ' + tx.nota : '');
+        cls = 'income'; amt = '+' + yen(tx.monto);
+    } else if (tx._t === 'gasto') {
+        title = CAT_LABELS[tx.categoria] || 'Gasto';
+        meta = fDate(tx.fecha) + (tx.nota ? ' · ' + tx.nota : '');
+        cls = 'expense'; amt = '-' + yen(tx.monto);
+    } else {
+        title = tx.nombre || 'Subpromotor';
+        meta = fDate(tx.fecha) + (tx.nota ? ' · ' + tx.nota : '');
+        cls = 'sub'; amt = '-' + yen(tx.monto);
+    }
+    const del = deletable ? `<button class="tx-delete" onclick="deleteItem('${type}',${idx})">×</button>` : '';
+    return `<div class="tx-item">
+        <div class="tx-left">
+            <div class="tx-title">${title}</div>
+            <div class="tx-meta">${meta}</div>
+        </div>
+        <div style="display:flex;align-items:center">
+            <div class="tx-amount ${cls}">${amt}</div>${del}
+        </div>
+    </div>`;
+}
+
+// ========== DELETE ==========
+function deleteItem(type, idx) {
+    if (!confirm('¿Eliminar este registro?')) return;
+    db[type].splice(idx, 1);
+    save(); render();
+}
+
+// ========== MODAL ==========
+const today = () => new Date().toISOString().split('T')[0];
+
+function openModal() {
+    const t = document.getElementById('modal-title');
+    const c = document.getElementById('modal-content');
+
+    if (currentPage === 'dashboard' || currentPage === 'ingresos') {
+        t.textContent = 'Nuevo Ingreso';
+        c.innerHTML = `
+            <div class="form-group">
+                <label class="form-label">Fecha</label>
+                <input type="date" class="form-input" id="f-fecha" value="${today()}">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Cliente / Concepto</label>
+                <input type="text" class="form-input" id="f-cliente" placeholder="Ej: Club X, Comisión...">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Monto (¥)</label>
+                <input type="number" class="form-input" id="f-monto" placeholder="0" inputmode="numeric">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Nota (opcional)</label>
+                <input type="text" class="form-input" id="f-nota" placeholder="">
+            </div>
+            <button class="btn-primary" onclick="saveEntry('ingreso')">Guardar</button>
+            <button class="btn-secondary" onclick="closeModal()">Cancelar</button>`;
+    } else if (currentPage === 'gastos') {
+        t.textContent = 'Nuevo Gasto';
+        c.innerHTML = `
+            <div class="form-group">
+                <label class="form-label">Fecha</label>
+                <input type="date" class="form-input" id="f-fecha" value="${today()}">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Categoría</label>
+                <select class="form-input" id="f-categoria">
+                    <option value="transporte">Transporte (Uber / Taxi)</option>
+                    <option value="clientes">Comida y Clientes (交際費)</option>
+                    <option value="comunicacion">Comunicación</option>
+                    <option value="alquiler">Alquiler</option>
+                    <option value="medico">Médico</option>
+                    <option value="otro">Otro</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Monto (¥)</label>
+                <input type="number" class="form-input" id="f-monto" placeholder="0" inputmode="numeric">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Nota (opcional)</label>
+                <input type="text" class="form-input" id="f-nota" placeholder="Ej: Reunion con cliente...">
+            </div>
+            <button class="btn-primary" onclick="saveEntry('gasto')">Guardar</button>
+            <button class="btn-secondary" onclick="closeModal()">Cancelar</button>`;
+    } else if (currentPage === 'subs') {
+        t.textContent = 'Pago a Equipo / DJ';
+        c.innerHTML = `
+            <div class="form-group">
+                <label class="form-label">Fecha</label>
+                <input type="date" class="form-input" id="f-fecha" value="${today()}">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Nombre</label>
+                <input type="text" class="form-input" id="f-nombre" placeholder="Ej: DJ Taro, Subpromotor X...">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Monto (¥)</label>
+                <input type="number" class="form-input" id="f-monto" placeholder="0" inputmode="numeric">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Nota (opcional)</label>
+                <input type="text" class="form-input" id="f-nota" placeholder="">
+            </div>
+            <button class="btn-primary" onclick="saveEntry('sub')">Guardar</button>
+            <button class="btn-secondary" onclick="closeModal()">Cancelar</button>`;
+    }
+
+    document.getElementById('modal-overlay').classList.add('active');
+}
+
+function closeModal() {
+    document.getElementById('modal-overlay').classList.remove('active');
+}
+
+// ========== SAVE ==========
+function saveEntry(type) {
+    const fecha = document.getElementById('f-fecha').value;
+    const monto = Number(document.getElementById('f-monto').value);
+    const nota = (document.getElementById('f-nota')?.value || '').trim();
+
+    if (!monto || monto <= 0) { showAlert('Ingresa un monto válido'); return; }
+
+    if (type === 'ingreso') {
+        const cliente = (document.getElementById('f-cliente')?.value || '').trim();
+        db.ingresos.push({id: Date.now(), fecha, cliente, monto, nota});
+    } else if (type === 'gasto') {
+        const categoria = document.getElementById('f-categoria').value;
+        db.gastos.push({id: Date.now(), fecha, categoria, monto, nota});
+    } else {
+        const nombre = (document.getElementById('f-nombre')?.value || '').trim();
+        db.subs.push({id: Date.now(), fecha, nombre, monto, nota});
+    }
+
+    save();
+    closeModal();
+    showAlert('Guardado');
+    render();
+}
+
+// ========== YEAR PICKER ==========
+function openYearPicker() {
+    const years = [2023, 2024, 2025, 2026];
+    const div = document.createElement('div');
+    div.className = 'year-modal';
+    div.innerHTML = years.map(y =>
+        `<div class="year-option ${y===currentYear?'active':''}" onclick="setYear(${y}, this.parentNode)">${y}</div>`
+    ).join('');
+    document.body.appendChild(div);
+
+    const close = (e) => { if (!div.contains(e.target)) { div.remove(); document.removeEventListener('click', close); }};
+    setTimeout(() => document.addEventListener('click', close), 100);
+}
+
+function setYear(y, el) {
+    currentYear = y;
+    el.remove();
+    document.getElementById('headerYear').textContent = y;
+    render();
+}
+
+// ========== ALERT ==========
+function showAlert(msg) {
+    const a = document.createElement('div');
+    a.className = 'alert'; a.textContent = msg;
+    document.body.appendChild(a);
+    setTimeout(() => a.remove(), 2000);
+}
+
+// ========== INIT ==========
+document.getElementById('fab-btn').addEventListener('click', openModal);
+document.getElementById('modal-overlay').addEventListener('click', function(e) {
+    if (e.target === this) closeModal();
+});
+
+renderDash();
+</script>
+</body>
+</html>
